@@ -1,0 +1,95 @@
+# SS-Mamba Configuration File
+# ============================
+
+# Model Configuration
+model:
+  name: "SS-Mamba"
+  feature_dim: 1024          # Input feature dimension
+  hidden_dim: 512            # Hidden dimension for Mamba
+  num_layers: 2              # Number of Mamba layers
+  dropout: 0.25              # Dropout rate
+  
+  # 2D-SSM Backbone
+  backbone:
+    type: "mamba_2d"
+    d_state: 16              # State dimension
+    d_conv: 4                # Convolution kernel size
+    expand: 2                # Expansion factor
+    
+  # BiMamba Aggregator  
+  aggregator:
+    type: "bimamba"
+    bidirectional: true
+    pooling: "attention"     # Options: attention, mean, max
+
+# Semantic Ordering Configuration
+ordering:
+  enabled: true
+  lambda_spatial: 0.5        # Balance between semantic and spatial
+  sigma: 100                 # Spatial decay parameter
+  method: "greedy_nn"        # Options: greedy_nn, optimal_transport
+
+# Dataset Configuration
+data:
+  patch_size: 256
+  magnification: 20
+  max_patches: 20000         # Maximum patches per slide
+  
+  # Dataset-specific settings
+  camelyon16:
+    num_classes: 2
+    class_names: ["Normal", "Tumor"]
+    
+  tcga_brca:
+    num_classes: 4
+    class_names: ["Luminal_A", "Luminal_B", "HER2", "Basal"]
+    
+  bracs:
+    num_classes: 7
+    class_names: ["Normal", "Benign", "UDH", "ADH", "FEA", "DCIS", "Invasive"]
+
+# Training Configuration
+training:
+  epochs: 100
+  batch_size: 1              # 1 for MIL (one bag = one slide)
+  num_workers: 4
+  
+  # Optimizer
+  optimizer: "adamw"
+  lr: 0.0002
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
+  
+  # Scheduler
+  scheduler: "cosine"
+  warmup_epochs: 5
+  min_lr: 0.000001
+  
+  # Regularization
+  label_smoothing: 0.1
+  gradient_clip: 1.0
+  
+  # Class balancing
+  balanced_sampling: true
+  
+# Evaluation Configuration
+evaluation:
+  metrics: ["auc", "accuracy", "f1", "confusion_matrix"]
+  n_folds: 5                 # 5-fold cross-validation
+  save_predictions: true
+
+# Logging Configuration
+logging:
+  log_dir: "logs/"
+  save_dir: "checkpoints/"
+  log_every: 10              # Log every N iterations
+  save_every: 10             # Save checkpoint every N epochs
+  use_wandb: false
+  use_tensorboard: true
+
+# Hardware Configuration
+hardware:
+  device: "cuda"
+  num_gpus: 1
+  mixed_precision: true      # Use AMP for faster training
+  seed: 42
